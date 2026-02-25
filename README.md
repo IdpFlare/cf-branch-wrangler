@@ -115,6 +115,36 @@ The tool is safe to run multiple times on the same branch:
 - Reuses existing databases, buckets, and namespaces
 - Only updates bindings when resources change
 
+## Cleanup
+
+Remove branch-specific resources that are no longer needed:
+
+```bash
+npx cf-branch-wrangler cleanup
+```
+
+This scans your Cloudflare account for resources matching the naming pattern from your wrangler config (e.g., `my-db-feature-branch`) and prompts before deleting each one.
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--confirm` | Skip interactive prompts, delete all matching resources |
+| `--branch <name>` | Only clean up resources for a specific branch |
+
+### Examples
+
+```bash
+# Interactive cleanup - prompts before each deletion
+npx cf-branch-wrangler cleanup
+
+# Clean up a specific branch
+npx cf-branch-wrangler cleanup --branch feature-xyz
+
+# Non-interactive, delete everything (for CI/scripts)
+npx cf-branch-wrangler cleanup --confirm
+```
+
 ## License
 
 MIT
