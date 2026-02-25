@@ -1,0 +1,44 @@
+{
+  "name": "@idpflare/cf-branch-wrangler",
+  "version": "1.0.0",
+  "description": "Automated infrastructure provisioning for Cloudflare Pages branch deployments",
+  "author": "Luke Schafer",
+  "license": "MIT",
+  "keywords": [
+    "cloudflare",
+    "cloudflare-pages",
+    "d1",
+    "r2",
+    "kv",
+    "branch-deployments",
+    "preview-deployments",
+    "infrastructure",
+    "provisioning",
+    "wrangler"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idpflare/cf-branch-wrangler.git"
+  },
+  "homepage": "https://github.com/idpflare/cf-branch-wrangler#readme",
+  "bugs": {
+    "url": "https://github.com/idpflare/cf-branch-wrangler/issues"
+  },
+  "bin": {
+    "cf-branch-wrangler": "./bin/index.js"
+  },
+  "main": "./lib/index.js",
+  "files": [
+    "bin",
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@iarna/toml": "^2.2.5",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
