@@ -41,7 +41,7 @@ Cloudflare Pages will run `prebuild` automatically before `build`, provisioning 
 | Variable | Description |
 |----------|-------------|
 | `CLOUDFLARE_ACCOUNT_ID` | Auto-derived from Wrangler auth (no need to set) |
-| `CF_PAGES_PROJECT_NAME` | Auto-derived from `wrangler.toml` `name` field |
+| `CF_PAGES_PROJECT_NAME` | Auto-derived from wrangler config `name` field |
 | `CF_PAGES_PRODUCTION_BRANCH` | Production branch name (default: `main`) |
 
 ### Running Manually
@@ -51,14 +51,18 @@ npx cf-branch-wrangler
 ```
 
 The tool will:
-1. Parse `wrangler.toml` to discover D1, R2, and KV bindings
+1. Parse your wrangler config (`wrangler.toml` or `wrangler.jsonc`) to discover D1, R2, and KV bindings
 2. Skip provisioning if running on the production branch
 3. Create branch-specific resources (e.g., `my-db-feature-branch`)
 4. Run D1 migrations if `migrations/` directory exists
 5. Execute `seed.sql` if present
 6. Update the Pages Project's preview deployment bindings
 
-## wrangler.toml Format
+## Configuration Format
+
+Both `wrangler.toml` and `wrangler.jsonc` are supported. The tool auto-detects which format your project uses (preferring `wrangler.jsonc` if both exist).
+
+### wrangler.toml
 
 ```toml
 # D1 Databases
@@ -77,9 +81,26 @@ binding = "CACHE"
 id = "my-app-cache"
 ```
 
+### wrangler.jsonc
+
+```jsonc
+{
+  "name": "my-app",
+  "d1_databases": [
+    { "binding": "DB", "database_name": "my-app-db" }
+  ],
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "my-app-bucket" }
+  ],
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "my-app-cache" }
+  ]
+}
+```
+
 ## How It Works
 
-1. **Resource Discovery**: Reads your `wrangler.toml` to find all bindings
+1. **Resource Discovery**: Reads your wrangler config (`wrangler.toml` or `wrangler.jsonc`) to find all bindings
 2. **Branch Detection**: Checks `CF_PAGES_BRANCH` against production branch
 3. **Name Sanitization**: Converts branch names to safe Cloudflare resource names
    - Lowercase, alphanumeric + hyphens only
