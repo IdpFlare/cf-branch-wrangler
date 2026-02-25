@@ -31,11 +31,16 @@ Cloudflare Pages will run `prebuild` automatically before `build`, provisioning 
 
 | Variable | Description |
 |----------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Bearer token for Cloudflare API requests |
-| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare Account ID |
-| `CF_PAGES_PROJECT_NAME` | Target Pages Project name |
+| `CLOUDFLARE_API_TOKEN` | Bearer token for Cloudflare API requests (set in Pages project settings) |
 | `CF_PAGES_BRANCH` | Current branch (auto-set by Cloudflare Pages) |
-| `CF_PAGES_PRODUCTION_BRANCH` | Optional: Production branch name (default: `main`) |
+
+### Optional Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `CLOUDFLARE_ACCOUNT_ID` | Auto-derived from Wrangler auth (no need to set) |
+| `CF_PAGES_PROJECT_NAME` | Auto-derived from `wrangler.toml` `name` field |
+| `CF_PAGES_PRODUCTION_BRANCH` | Production branch name (default: `main`) |
 
 ### Running Manually
 
