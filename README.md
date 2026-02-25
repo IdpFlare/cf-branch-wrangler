@@ -31,8 +31,10 @@ Cloudflare Pages will run `prebuild` automatically before `build`, provisioning 
 
 | Variable | Description |
 |----------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Bearer token for Cloudflare API requests (set in Pages project settings) |
+| `CLOUDFLARE_API_TOKEN` | Bearer token for Cloudflare API requests (set as a **Preview** secret in Pages project settings) |
 | `CF_PAGES_BRANCH` | Current branch (auto-set by Cloudflare Pages) |
+
+> **Note:** The `CLOUDFLARE_API_TOKEN` must be added under **Settings → Environment variables → Preview** (not Production). The tool only runs for non-production branches, so Production doesn't need it.
 
 ### Optional Environment Variables
 
