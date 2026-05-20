@@ -1,16 +1,20 @@
 # cf-branch-wrangler
 
-Automated infrastructure provisioning for Cloudflare Pages branch deployments.
+Automated infrastructure provisioning for Cloudflare Pages and Workers branch deployments.
 
 ## Overview
 
-Solves the "Binding Gap" problem for Cloudflare Pages. When deploying preview branches, each branch needs isolated D1 databases, R2 buckets, and KV namespaces with proper bindings configured in the Pages Project settings via the Cloudflare API.
+Solves the "Binding Gap" problem for Cloudflare deployments. When deploying preview branches via CI/CD, each branch needs isolated D1 databases, R2 buckets, and KV namespaces. This tool provisions these resources dynamically and:
+- **For Pages**: Patches the Pages Project preview deployment bindings via the Cloudflare API.
+- **For Workers**: Rewrites `wrangler.toml` with the new bindings so they are applied on `wrangler deploy`.
 
 ## Installation
 
 ```bash
 npm install -D cf-branch-wrangler
 ```
+
+### For Cloudflare Pages
 
 Then add it as a prebuild step in your `package.json`:
 
@@ -25,16 +29,47 @@ Then add it as a prebuild step in your `package.json`:
 
 Cloudflare Pages will run `prebuild` automatically before `build`, provisioning branch-specific resources in CI.
 
+### For Cloudflare Workers Builds (Git Integration)
+
+If you have connected your Git repository directly to a Worker via the Cloudflare dashboard:
+
+1. Add `cf-branch-wrangler` as a prebuild step in your `package.json`:
+   ```json
+   {
+     "scripts": {
+       "prebuild": "cf-branch-wrangler",
+       "build": "your-build-command"
+     }
+   }
+   ```
+2. Cloudflare's build system will run `prebuild` before deploying. The tool automatically detects the `WORKERS_CI_BRANCH` environment variable and rewrites your `wrangler.toml` with branch-specific resources so that the deployment picks them up.
+
+### For External CI (GitHub Actions, GitLab, etc.)
+
+Run the tool before your `wrangler deploy` step:
+
+```yaml
+- name: Provision Branch Infrastructure
+  run: npx cf-branch-wrangler
+  env:
+    CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    # GitHub Actions sets GITHUB_REF_NAME automatically!
+
+- name: Deploy to Cloudflare Workers
+  run: npx wrangler deploy --env ${{ github.ref_name }}
+```
+
 ## Usage
 
 ### Required Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Bearer token for Cloudflare API requests (set as a **Preview** secret in Pages project settings) |
-| `CF_PAGES_BRANCH` | Current branch (auto-set by Cloudflare Pages) |
+| `CLOUDFLARE_API_TOKEN` | Bearer token for Cloudflare API requests (Required for Pages projects. For Workers, Wrangler uses this or `WRANGLER_AUTH_TOKEN` implicitly) |
+| `CF_PAGES_BRANCH` / `WORKERS_CI_BRANCH` | Current branch (auto-set by Cloudflare Pages/Workers CI) |
+| `CF_BRANCH` / `GITHUB_HEAD_REF` / `GITHUB_REF_NAME` | Alternative branch variables. If Cloudflare CI variables are missing, the tool falls back to these. |
 
-> **Note:** The `CLOUDFLARE_API_TOKEN` must be added under **Settings → Environment variables → Preview** (not Production). The tool only runs for non-production branches, so Production doesn't need it.
+> **Note (Pages):** The `CLOUDFLARE_API_TOKEN` must be added under **Settings → Environment variables → Preview** (not Production). The tool only runs for non-production branches, so Production doesn't need it.
 
 ### Optional Environment Variables
 
@@ -43,6 +78,7 @@ Cloudflare Pages will run `prebuild` automatically before `build`, provisioning 
 | `CLOUDFLARE_ACCOUNT_ID` | Auto-derived from Wrangler auth (no need to set) |
 | `CF_PAGES_PROJECT_NAME` | Auto-derived from wrangler config `name` field |
 | `CF_PAGES_PRODUCTION_BRANCH` | Production branch name (default: `main`) |
+| `CF_PRODUCTION_BRANCH` | Fallback for production branch name (default: `main`) |
 
 ### Running Manually
 
@@ -56,7 +92,8 @@ The tool will:
 3. Create branch-specific resources (e.g., `my-db-feature-branch`)
 4. Run D1 migrations if `migrations/` directory exists
 5. Execute `seed.sql` if present
-6. Update the Pages Project's preview deployment bindings
+6. Update `wrangler.toml` dynamically with the newly provisioned resource IDs
+7. For Pages projects only: Update the Pages Project's preview deployment bindings via Cloudflare API
 
 ## Configuration Format
 
@@ -101,12 +138,13 @@ id = "my-app-cache"
 ## How It Works
 
 1. **Resource Discovery**: Reads your wrangler config (`wrangler.toml` or `wrangler.jsonc`) to find all bindings
-2. **Branch Detection**: Checks `CF_PAGES_BRANCH` against production branch
+2. **Branch Detection**: Checks branch environment variables against the production branch
 3. **Name Sanitization**: Converts branch names to safe Cloudflare resource names
    - Lowercase, alphanumeric + hyphens only
    - Max 63 characters
 4. **Provisioning**: Uses `wrangler` CLI to create resources if they don't exist
-5. **Binding Update**: Patches Pages Project preview bindings via Cloudflare API
+5. **Config Update**: Rewrites your local wrangler config with branch-specific IDs so subsequent commands use them
+6. **Binding Update (Pages Only)**: Patches Pages Project preview bindings via Cloudflare API
 
 ## Idempotency
 
