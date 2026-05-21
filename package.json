@@ -1,6 +1,6 @@
 {
   "name": "@idpflare/cf-branch-wrangler",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Automated infrastructure provisioning for Cloudflare Pages and Workers branch deployments",
   "author": "Luke Schafer",
   "license": "MIT",
